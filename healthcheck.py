@@ -2,12 +2,12 @@
 
 from subprocess import call
 import shlex
+import migconfig
 
 bases = {
 	"rabbit" : "sudo service rabbitmq-server ",
 	"mongodb" : "sudo service mongodb ",
-	"mogilefs" : "sudo service mogilefsd ",
-	"mogstored" : "sudo service mogstored "}
+	}
 
 actions = {"start": "start", "status": "status", "stop": "stop", "restart": "restart"}
 

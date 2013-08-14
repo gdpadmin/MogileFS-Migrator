@@ -18,6 +18,15 @@ class MogileLogger:
 		self.files = self.db['mogfiles']
 		self.logger = FileLogger()
 
+	def check(self):
+		testing = {"_id": "testingmongo", "msg": "just testing"}
+		identry = {"_id": "testingmongo"}
+		self.files.insert(testing)
+		data = self.files.find_one(identry)
+		self.files.remove(identry)
+		data = self.files.find_one(identry)
+		print "Mongodb ok"
+
 	def info(self, message):
 		logging.info(message)
 

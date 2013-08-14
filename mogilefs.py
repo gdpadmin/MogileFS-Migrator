@@ -78,7 +78,8 @@ permitted by applicable law.
 
 
 
-import md5
+#import md5
+import hashlib
 import cStringIO
 import re
 import time
@@ -423,7 +424,7 @@ class Client(common):
             chunk = source.read(chunksize)
             if not chunk:
                 break
-            md5sum = md5.md5(chunk).hexdigest()
+            md5sum = hashlib.md5(chunk).hexdigest()
             size = len(chunk)
             ckey = "%s,%d" % (key, cnum) 
             chunkinfo.append((md5sum, size, ckey))
@@ -672,7 +673,7 @@ class Client(common):
                     curl.close()
                     if fp is None:
                         contents = ofp.getvalue()
-                        if not checksum or md5.md5(contents).hexdigest() == checksum:
+                        if not checksum or hashlib.md5(contents).hexdigest() == checksum:
                             return contents
                         else :
                             self._debug("Checksum error on path %s" % path)
@@ -693,7 +694,7 @@ class Client(common):
                     contents = f.read()
                     f.close()
                     if fp is None:
-                        if not checksum or md5.md5(contents).hexdigest() == checksum:
+                        if not checksum or hashlib.md5(contents).hexdigest() == checksum:
                             return contents
                         else :
                             self._debug("Checksum error on path %s" % path)
@@ -1511,7 +1512,7 @@ def test():
         time.sleep(1)
         try :
             start = time.time()
-            m = md5.md5()
+            m = hashlib.md5()
             [m.update(p) for p in c.get_bigfile_iter('/isos//ubuntu-5.04-install-i386.iso')]
             end = time.time()
             x+=1

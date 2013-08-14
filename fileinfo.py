@@ -61,7 +61,7 @@ class FileInfo:
 		sha1 = self.calculate_sha1()
 		path = self.file
 		base = self.base
-		result = {"size": size, "_id": sha1, "path": path, "base": base}
+		result = {"size": size, "_id": base, "path": path, "base": base}
 		return result
 
 	def to_string(self):
