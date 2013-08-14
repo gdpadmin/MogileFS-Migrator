@@ -1,0 +1,47 @@
+import os
+import array
+
+def readAllDir(path):
+	"""Read all file name under given path recursively
+	Keywords arguments:
+	path -- location where file will be read
+	return list of files
+	"""
+	result = []
+	if os.path.isdir(path):
+		for path, dirs, files in os.walk(path):
+			for f in files:
+				result.append(os.path.join(path, f))
+	return result
+
+def readDir(path):
+	"""Read all file name under given directory
+	
+	Keyword arguments:
+	path -- location where file will be read
+	return list of files
+	"""
+	result = []
+	if os.path.isdir(path):
+		listing = os.listdir(path)
+		for file in listing:
+			abspath = os.path.join(path, file)
+			if os.path.isfile(abspath):
+				result.append(abspath)
+	return result
+
+def readLevel(base, path):
+	result = {'directories': [], 'files': []}
+	fullpath = os.path.join(base, path)
+	if os.path.isdir(fullpath):
+		listing = os.listdir(fullpath)
+		for name in listing:
+			abspath = os.path.join(fullpath, name)
+			metadata = {"base": base, "path": os.path.join(path, name)}
+			if os.path.isfile(abspath):
+				result['files'].append(metadata)
+			else:
+				result['directories'].append(metadata)
+	return result
+
+

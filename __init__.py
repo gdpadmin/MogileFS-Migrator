@@ -1,0 +1,1 @@
+from nfstomogile.dircreator import main
