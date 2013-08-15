@@ -54,8 +54,7 @@ class FileInfo:
 
 	def equal_meta(self, fileinfo):
 		return fileinfo["size"] == self.get_size() and \
-			fileinfo["hash"] == self.calculate_sha1() and \
-			fileinfo["_id"] == self.file
+			fileinfo["hash"] == self.calculate_sha1()
 	
 	def to_collection(self):
 		size = self.get_size()
