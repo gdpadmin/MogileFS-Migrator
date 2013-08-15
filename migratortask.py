@@ -41,6 +41,7 @@ def callback(ch, method, properties, body):
 	global trans
 	global vclient
 	global mqclient
+	stats = "NOT OK"
 
 	#while (callback_flag):
 	file_logger.info("Start Migration: " + repr(body))
@@ -61,8 +62,9 @@ def callback(ch, method, properties, body):
 			file_logger.info("Saved metadata: " + repr(coll))
 			vclient.send(coll["_id"])
 			file_logger.info("Validation task: " + coll["_id"])
+			stats = "OK"
 		elif trans_result == None:
-			file_logger.warning("key exist" + key)
+			file_logger.warning("Not saved because key exist: " + key)
 		else:
 			message = "Error sent file to MogileFS: " + info.to_string()
 			file_logger.error(message)
@@ -73,7 +75,7 @@ def callback(ch, method, properties, body):
 		logger.file_saved(coll)
 		file_logger.error("Infected file: " + repr(coll))
 	ch.basic_ack(delivery_tag = method.delivery_tag)
-	file_logger.info("End migration " + repr(body))
+	file_logger.info("End migration " + stats)
 
 if __name__ == "__main__":
 	domain = migconfig.domain
@@ -88,8 +90,8 @@ if __name__ == "__main__":
 		try:
 			file_logger.info("Initializing mogilefs client, domain %s, trackers %s" % (domain, trackers));
 			trans = MogTransport(domain=domain, trackers=trackers)
-			vclient = RMQClient(queue="validation_job_queue")
-			mqclient = RMQClient(queue="migration_job_queue")
+			vclient = RMQClient(queue=migconfig.validation_queue)
+			mqclient = RMQClient(queue=migconfig.migration_queue)
 			logger = MogileLogger()
 			scanner = ClamdScanner()
 			scanner.init_clamd()

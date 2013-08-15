@@ -13,6 +13,7 @@ The following is validation steps
 """
 
 from mogilelogger import MogileLogger
+from mogilelogger import FileLogger
 from clamdscanner import ClamdScanner
 from writer import RMQClient
 from mogtransport import MogTransport
@@ -24,6 +25,7 @@ import os
 import sys
 import json
 import misc
+import migconfig
 
 def report_error(message):
 	global vclient
@@ -35,15 +37,17 @@ def report_error(message):
 	misc.report_error(errormsg)
 
 def callback(ch, method, properties, body):
-	print "Start validation: %s" % (body, )
+	stats = "OK"
+
+	file_logger.info("Start validation: " + repr(body))
 	dbmeta = logger.file_get(body)
-	print "Database meta data: %s" % (dbmeta)
+	file_logger.info("Database meta data: " + repr(dbmeta))
 	base = "/tmp"
 	name = os.path.basename(dbmeta["path"])
 	fullpath = os.path.join(base, name)
 	trans.download_file(key=dbmeta["path"], name=fullpath)
 	mogmeta = FileInfo("/tmp", name)
-	print "MogileFS meta data: %s" % (mogmeta.to_collection())
+	file_logger.info("MogileFS meta data: " + repr(mogmeta.to_collection()))
 	if mogmeta.equal_meta(dbmeta):
 		logger.file_validated(dbmeta)
 	else:
@@ -52,24 +56,26 @@ def callback(ch, method, properties, body):
 		mqclient.send(migration_job)
 		msg = "File corrupted. Sent new job to migration queue: " + json.dumps(dbmeta)
 		logger.warning(msg)
+		stats = "CORRUPTED"
 	os.remove(fullpath)
 	ch.basic_ack(delivery_tag = method.delivery_tag)
-	print "End validation: %s" % (body,)
+	file_logger.info("End validation: " + stats)
 
 if __name__ == "__main__":
 	validation_task = True
 	while validation_task:
 		try:
-			domain = None
-			trackers = None
-			if len(sys.argv) == 3:
-				domain = sys.argv[1] if sys.argv[1] else None
-				listoftracker = sys.argv[2] if sys.argv[2] else None
-				trackers = listoftracker.split(";")
+			domain = migconfig.domain
+			trackers = migconfig.trackers
+			#if len(sys.argv) == 3:
+			#	domain = sys.argv[1] if sys.argv[1] else None
+			#	listoftracker = sys.argv[2] if sys.argv[2] else None
+			#	trackers = listoftracker.split(";")
 			trans = MogTransport(domain=domain, trackers=trackers)
-			vclient = RMQClient(queue="validation_job_queue")
-			mqclient = RMQClient(queue="migration_job_queue")
+			vclient = RMQClient(queue=migconfig.validation_queue)
+			mqclient = RMQClient(queue=migconfig.migration_queue)
 			logger = MogileLogger()
+			file_logger = FileLogger()
 			vclient.receive(callback)
 		except errors.ConnectionFailure:
 			report_error('mongodb')

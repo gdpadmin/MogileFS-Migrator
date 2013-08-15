@@ -241,6 +241,7 @@ def remote_handler(sock, addr):
 				sock.send(result)
 	except AMQPConnectionError:
 		report_error('rabbitmq')
+		sock.close()
 	finally:
 		sock.close()
 		print addr, "- closed connection"

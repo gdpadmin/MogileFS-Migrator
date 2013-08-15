@@ -21,7 +21,8 @@ sleep_time = misc.sleep_time
 directory_queue = set()
 basepath = None
 current_level = ''
-this_task = True
+ctrl_task = True
+mgmt_task = True
 
 
 def count_pending_job():
@@ -84,10 +85,10 @@ def control_migration_rate():
 	global migrationmq
 	global job_treshold
 	global current_level
-	global this_task
+	global ctrl_task
 	global sleep_time
 
-	while (this_task):
+	while (ctrl_task):
 		if (migrationmq.get_message_count() > job_treshold):
 			time.sleep(sleep_time)
 		else:
@@ -101,12 +102,12 @@ def report_error(message):
 	misc.report_error(errormsg)
 
 def control_job():
-	global this_task
+	global ctrl_task
 	global migrationmq
 	global directorymq
 	global current_level
 
-	while (this_task):
+	while (ctrl_task):
 		try:
 			migrationmq = RMQClient(queue="migration_job_queue")
 			execute_level(current_level)
@@ -115,8 +116,9 @@ def control_job():
 			report_error('rabbitmq')
 
 def management_job():
-	this_job = True
-	while this_job:
+	global mgmt_task
+
+	while mgmt_task:
 		try:
 			cmd = raw_input()
 			result = do_command(cmd)
@@ -137,9 +139,14 @@ def get_help():
 def do_command(cmd):
 	global job_treshold
 	global sleep_time
+	global ctrl_task
+	global mgmt_task
 	message = 'ok'
 
-	if cmd == "!get_job_treshold":
+	if cmd == "close":
+		ctrl_task = False
+		mgmt_task = False
+	elif cmd == "!get_job_treshold":
 		message = "Job treshold: " + repr(job_treshold)
 	elif cmd == "!get_sleep_time":
 		message = "Sleep time: " + repr(sleep_time)
