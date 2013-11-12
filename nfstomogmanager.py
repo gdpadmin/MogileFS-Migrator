@@ -22,7 +22,6 @@ from writer import RMQClient
 from socket import *
 from pika.exceptions import AMQPConnectionError
 
-import metafeedertask
 import subprocess
 import sys
 import time
