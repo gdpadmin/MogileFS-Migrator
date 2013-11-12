@@ -78,8 +78,8 @@ def callback(ch, method, properties, body):
 			coll['status'] = 'infected'
 			logger.file_saved(coll)
 			file_logger.error(procid + " Infected file: " + repr(coll))
-		ch.basic_ack(delivery_tag = method.delivery_tag)
-		file_logger.info(procid + " End migration %s: %s " %(repr(body),  stats))
+	ch.basic_ack(delivery_tag = method.delivery_tag)
+	file_logger.info(procid + " End migration %s: %s " %(repr(body),  stats))
 
 if __name__ == "__main__":
 	procid = misc.generate_id()

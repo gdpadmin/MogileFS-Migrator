@@ -14,6 +14,19 @@ def readAllDir(path):
 				result.append(os.path.join(path, f))
 	return result
 
+
+def readAllLevelSuffix(base, suffix):
+	result = []
+        start = base
+	base_with_suffix = os.path.join(base, suffix)
+        if os.path.isdir(base_with_suffix):
+                for path, dirs, files in os.walk(base_with_suffix):
+                        for f in files:
+                                dinamic = path.replace(start, "")
+                                metadata = {"base": start, "path": os.path.join(dinamic, f)}
+                                result.append(metadata)
+        return result
+
 def readAllLevel(path):
 	result = []
 	start = path
