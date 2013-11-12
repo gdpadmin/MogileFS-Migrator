@@ -52,6 +52,8 @@ def callback(ch, method, properties, body):
 	fullpath = info.get_absolute_path()
 	if trans.key_exist(key=key):
 		file_logger.warning(procid + " Key exist: " + key)
+	elif not os.path.isfile(fullpath):
+		file_logger.warning(procid + " File does not exist: " + fullpath)
 	else:
 		file_logger.info("Scanning file: " + fullpath)
 		scan_result = scanner.scan_file(fullpath)
