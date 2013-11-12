@@ -45,12 +45,12 @@ def callback(ch, method, properties, body):
 	global procid
 	stats = "NOT OK"
 
-	#while (callback_flag):
 	file_logger.info(procid + " Start Migration: " + repr(body))
 	meta = json.loads(body)
 	key = meta["path"]
 	info = FileInfo(meta["base"], key)
 	fullpath = info.get_absolute_path()
+	file_logger.info("Scanning file: " + fullpath)
 	scan_result = scanner.scan_file(fullpath)
 	file_logger.info(procid + " Scanned file {0}: {1}".format(fullpath,scan_result))
 	if scan_result:

@@ -24,12 +24,16 @@ class RMQClient:
 		self.channel.start_consuming()
 
 	def get(self):
-		method_frame, header_frame, body = self.channel.basic_get(queue=self.queue)
-		if method_frame.NAME == 'Basic.GetEmpty':
-			return None
-		else:
-			self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
-			return body
+		try:
+			method_frame, header_frame, body = self.channel.basic_get(queue=self.queue)
+			if method_frame.NAME == 'Basic.GetEmpty':
+				return None
+			else:
+				self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+				return body
+		except AttributeError:
+			pass
+		return False
 
 	def get_message_count(self):
 		status = self.channel.queue_declare(queue=self.queue, durable=True)

@@ -16,8 +16,8 @@ import re
 import threading
 import thread
 
-job_treshold = 0
-sleep_time = misc.sleep_time
+job_treshold = 1000
+sleep_time = 1
 directory_queue = set()
 basepath = None
 current_level = ''

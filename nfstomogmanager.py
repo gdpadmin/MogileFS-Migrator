@@ -38,7 +38,6 @@ migrator = []
 validator = []
 metafeeder = []
 basepath = ''
-feeder_basepath = '/mnt/mogwp'
 
 def report_error(message):
 	errormsg = "NFSToManager report error: " + message
@@ -49,18 +48,6 @@ def setup():
 	
 	realpath = os.path.realpath(__file__)
 	basepath = os.path.dirname(realpath)
-
-def spawn_metafeeder(number=1):
-	global metafeeder
-	global feeder_basepath
-
-	adjust_proc(number, metafeeder, "metafeedertask.py " + feeder_basepath)
-
-def list_metafeeder():
-	metarr = []
-	for proc in metafeeder:
-		metarr.append(proc.pid)
-	return "Metafeeder: " + repr(metarr)
 
 def spawn_migrator(number=2):
 	global migrator
@@ -99,23 +86,38 @@ def list_validator():
 		valarr.append(proc.pid)
 	return "Validator: " + repr(valarr)
 
-def kill_all():
-	global migrator
-	global validator
-	global metafeeder
+def reset_migrator():
+	length = len(migrator)
 
-	for proc in migrator:
-		proc.kill()
-		proc.wait()
+	kill_migrator()
+	spawn_migrator(length)
+
+def reset_validator():
+	length = len(validator)
+	
+	kill_validator()
+	spawn_validator(length)
+
+def kill_migrator():
+	global migrator
+
+        for proc in migrator:
+                proc.kill()
+                proc.wait()
+        del migrator[:]
+
+def kill_validator():
+	global validator
+
+ 
 	for proc in validator:
-		proc.kill()
-		proc.wait()
-	for proc in metafeeder:
-		proc.kill()
-		proc.wait()
-	del migrator[:]
+  		proc.kill()
+                proc.wait()
 	del validator[:]
-	del metafeeder[:]
+
+def kill_all():
+	kill_migrator()
+	kill_validator()
 
 def count_validation_job():
 	return "Validation job: " + str(validationmq.get_message_count())
@@ -132,9 +134,7 @@ def do_command(usercmd):
 	global migrationmq
 	message = 'ok\n'
 
-	if usercmd == "!count_feeder_job":
-		message = count_feeder_job()
-	elif usercmd == "!count_migration_job":
+	if usercmd == "!count_migration_job":
 		message = count_migration_job()
 	elif usercmd == "!count_validation_job":
 		message = count_validation_job()
@@ -146,6 +146,10 @@ def do_command(usercmd):
 		message = list_migrator()
 	elif (usercmd == "!list_validator"):
 		message = list_validator()
+	elif (usercmd == "!reset_migrator"):
+		reset_migrator()
+	elif (usercmd == "!reset_validator"):
+		reset_validator()
 	elif usercmd == "!start":
 		start()
 	elif usercmd == "!stats":
@@ -171,52 +175,39 @@ def do_regex_match(usercmd):
 			procnumber = misc.to_numeric(match_obj.group(1), 2)
 			spawn_validator(procnumber)
 		else:
-			match_obj = re.match(r'!feeder_path (["\'/a-zA-Z0-9\s]+)', usercmd, re.I)
-			if match_obj:
-				feeder_basepath = match_obj.group(1)
-				message = feeder_basepath
-			else:
-				match_obj = re.match(r'!want_feeder (\d+)', usercmd, re.I)
-				if match_obj:
-					procnumber = misc.to_numeric(match_obj.group(1), 1)
-					spawn_metafeeder(procnumber)
-				else:
-					message = "Unknown command: " + usercmd
-					message += "\nType !help for help"
+			message = "Unknown command: " + usercmd
+			message += "\nType !help for help"
 	return message
 
 def start():
 	spawn_migrator()
 	spawn_validator()
-	#spawn_metafeeder()
 
 def stats():
 	global feedermq
 
 	message = ''
-	message += list_metafeeder()
-	message += "\nFeeder job: " + repr(feedermq.get_message_count())
-	message += "\n" + list_migrator()
+	message += list_migrator()
 	message += '\n' + count_migration_job()
 	message += '\n' + list_validator()
 	message += '\n' + count_validation_job()
 	return message + '\n'
 
 def help():
-	message = ''
+	message = '\n'
 	message += "\nAvailable command:"
-	message += "\n!count_feeder_job"
+	message += "\nclose"
 	message += "\n!count_migration_job"
 	message += "\n!count_validation_job"
-	message += "\n!feeder_path [path to be read by metafeedertask]"
 	message += "\n!help"
 	message += "\n!kill_all"
 	message += "\n!list_migrator"
 	message += "\n!list_validator"
 	message += "\n!quit"
+	message += "\n!reset_migrator"
+	message += "\n!reset_validator"
 	message += "\n!start"
 	message += "\n!stats"
-	message += "\n!want_feeder [number of feeder]"
 	message += "\n!want_migrator [number of migrator]"
 	message += "\n!want_validator [number of validator]"
 	return message
