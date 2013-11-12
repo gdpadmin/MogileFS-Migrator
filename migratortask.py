@@ -50,34 +50,37 @@ def callback(ch, method, properties, body):
 	key = meta["path"]
 	info = FileInfo(meta["base"], key)
 	fullpath = info.get_absolute_path()
-	file_logger.info("Scanning file: " + fullpath)
-	scan_result = scanner.scan_file(fullpath)
-	file_logger.info(procid + " Scanned file {0}: {1}".format(fullpath,scan_result))
-	if scan_result:
-
-		trans_result = trans.send_file(source=fullpath, key=key, clas=migconfig.clas)
-		message = procid + " MogileFS key {0}: {1}".format(key, trans_result)
-		file_logger.info(message)
-		if trans_result == True:
-			coll = info.to_collection()
-			logger.file_saved(coll)
-			file_logger.info(procid + " Saved metadata: " + repr(coll))
-			vclient.send(coll["_id"])
-			file_logger.info(procid + " Validation task: " + coll["_id"])
-			stats = "OK"
-		elif trans_result == None:
-			file_logger.warning(procid + " Not saved because key exist: " + key)
-		else:
-			message = procid + " Error sent file to MogileFS: " + info.to_string()
-			file_logger.error(message)
-			mqclient.send(body)
+	if trans.key_exist(key=key):
+		logger.info(procid + " Key exist: " + key)
 	else:
-		coll = info.to_collection()
-		coll['status'] = 'infected'
-		logger.file_saved(coll)
-		file_logger.error(procid + " Infected file: " + repr(coll))
-	ch.basic_ack(delivery_tag = method.delivery_tag)
-	file_logger.info(procid + " End migration %s: %s " %(repr(body),  stats))
+		file_logger.info("Scanning file: " + fullpath)
+		scan_result = scanner.scan_file(fullpath)
+		file_logger.info(procid + " Scanned file {0}: {1}".format(fullpath,scan_result))
+		if scan_result:
+			file_logger.warning()
+			trans_result = trans.send_file(source=fullpath, key=key, clas=migconfig.clas)
+			message = procid + " MogileFS key {0}: {1}".format(key, trans_result)
+			file_logger.info(message)
+			if trans_result == True:
+				coll = info.to_collection()
+				logger.file_saved(coll)
+				file_logger.info(procid + " Saved metadata: " + repr(coll))
+				vclient.send(coll["_id"])
+				file_logger.info(procid + " Validation task: " + coll["_id"])
+				stats = "OK"
+			elif trans_result == None:
+				file_logger.warning(procid + " Not saved because key exist: " + key)
+			else:
+				message = procid + " Error sent file to MogileFS: " + info.to_string()
+				file_logger.error(message)
+				mqclient.send(body)
+		else:
+			coll = info.to_collection()
+			coll['status'] = 'infected'
+			logger.file_saved(coll)
+			file_logger.error(procid + " Infected file: " + repr(coll))
+		ch.basic_ack(delivery_tag = method.delivery_tag)
+		file_logger.info(procid + " End migration %s: %s " %(repr(body),  stats))
 
 if __name__ == "__main__":
 	procid = misc.generate_id()
