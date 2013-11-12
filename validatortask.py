@@ -30,39 +30,42 @@ import migconfig
 def report_error(message):
 	global vclient
 	global mqclient
+	global procid
 
 	vclient.close()
 	mqclient.close()
-	errormsg = "Validator task report error: " + message
+	errormsg = procid + " Validator task report error: " + message
 	misc.report_error(errormsg)
 
 def callback(ch, method, properties, body):
 	stats = "OK"
+	global procid
 
-	file_logger.info("Start validation: " + repr(body))
+	file_logger.info(procid + " Start validation: " + repr(body))
 	dbmeta = logger.file_get(body)
-	file_logger.info("Database meta data: " + repr(dbmeta))
+	file_logger.info(procid + " Database meta data: " + repr(dbmeta))
 	base = "/tmp"
 	name = os.path.basename(dbmeta["path"])
 	fullpath = os.path.join(base, name)
 	trans.download_file(key=dbmeta["path"], name=fullpath)
 	mogmeta = FileInfo("/tmp", name)
-	file_logger.info("MogileFS meta data: " + repr(mogmeta.to_collection()))
+	file_logger.info(procid + " MogileFS meta data: " + repr(mogmeta.to_collection()))
 	if mogmeta.equal_meta(dbmeta):
 		logger.file_validated(dbmeta)
 	else:
 		logger.file_corrupted(dbmeta)
 		migration_job = {"path": dbmeta["path"], "base": dbmeta["base"]}
 		mqclient.send(migration_job)
-		msg = "File corrupted. Sent new job to migration queue: " + json.dumps(dbmeta)
+		msg = procid + " File corrupted. Sent new job to migration queue: " + json.dumps(dbmeta)
 		logger.warning(msg)
 		stats = "CORRUPTED"
 	os.remove(fullpath)
 	ch.basic_ack(delivery_tag = method.delivery_tag)
-	file_logger.info("End validation: " + stats)
+	file_logger.info("%s End validation %s: %s" %(procid, repr(body), stats))
 
 if __name__ == "__main__":
 	validation_task = True
+	procid = misc.generate_id()
 	while validation_task:
 		try:
 			domain = migconfig.domain

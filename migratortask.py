@@ -29,8 +29,9 @@ callback_flag = True
 def report_error(message):
 	global vclient
 	global mqclient
+	global procid
 
-	errormsg = "Migrator task report error: " + message
+	errormsg = procid + " Migrator task report error: " + message
 	misc.report_error(errormsg)
 
 def callback(ch, method, properties, body):
@@ -41,43 +42,45 @@ def callback(ch, method, properties, body):
 	global trans
 	global vclient
 	global mqclient
+	global procid
 	stats = "NOT OK"
 
 	#while (callback_flag):
-	file_logger.info("Start Migration: " + repr(body))
+	file_logger.info(procid + " Start Migration: " + repr(body))
 	meta = json.loads(body)
 	key = meta["path"]
 	info = FileInfo(meta["base"], key)
 	fullpath = info.get_absolute_path()
 	scan_result = scanner.scan_file(fullpath)
-	file_logger.info("Scanned file {0}: {1}".format(fullpath,scan_result))
+	file_logger.info(procid + " Scanned file {0}: {1}".format(fullpath,scan_result))
 	if scan_result:
 
-		trans_result = trans.send_file(source=fullpath, key=key)
-		message = "MogileFS key {0}: {1}".format(key, trans_result)
+		trans_result = trans.send_file(source=fullpath, key=key, clas=migconfig.clas)
+		message = procid + " MogileFS key {0}: {1}".format(key, trans_result)
 		file_logger.info(message)
 		if trans_result == True:
 			coll = info.to_collection()
 			logger.file_saved(coll)
-			file_logger.info("Saved metadata: " + repr(coll))
+			file_logger.info(procid + " Saved metadata: " + repr(coll))
 			vclient.send(coll["_id"])
-			file_logger.info("Validation task: " + coll["_id"])
+			file_logger.info(procid + " Validation task: " + coll["_id"])
 			stats = "OK"
 		elif trans_result == None:
-			file_logger.warning("Not saved because key exist: " + key)
+			file_logger.warning(procid + " Not saved because key exist: " + key)
 		else:
-			message = "Error sent file to MogileFS: " + info.to_string()
+			message = procid + " Error sent file to MogileFS: " + info.to_string()
 			file_logger.error(message)
 			mqclient.send(body)
 	else:
 		coll = info.to_collection()
 		coll['status'] = 'infected'
 		logger.file_saved(coll)
-		file_logger.error("Infected file: " + repr(coll))
+		file_logger.error(procid + " Infected file: " + repr(coll))
 	ch.basic_ack(delivery_tag = method.delivery_tag)
-	file_logger.info("End migration " + stats)
+	file_logger.info(procid + " End migration %s: %s " %(repr(body),  stats))
 
 if __name__ == "__main__":
+	procid = misc.generate_id()
 	domain = migconfig.domain
 	trackers = migconfig.trackers
 	file_logger = FileLogger()

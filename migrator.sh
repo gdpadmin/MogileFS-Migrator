@@ -30,6 +30,7 @@ parsebase(){
 }
 
 if [ "$ACTION" == "kill" ]; then
+	ps ax | grep python
 	killpython
 	ps ax | grep python
 elif [ "$ACTION" == "start" ]; then

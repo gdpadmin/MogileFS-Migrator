@@ -12,16 +12,16 @@ class MogTransport:
 			trackers = ['localhost:7001']
 		self.client = Client(domain, trackers)
 
-	def send_file(self, key, source, force=False):
+	def send_file(self, key, source, clas=None, force=False):
 		res = True
 		if self.key_exist(key):
 			if force:
 				self.delete(key)
-				res = self.client.send_file(key=key, source=source)
+				res = self.client.send_file(key=key, source=source, clas=clas)
 			else:
 				res = None
 		else:
-			res = self.client.send_file(key=key, source=source)
+			res = self.client.send_file(key=key, source=source, clas=clas)
 		return res
 
 	def key_exist(self, key):
@@ -37,13 +37,25 @@ class MogTransport:
 			self.delete(key)
 
 	def delete_all(self):
-		keys = self.client.list_keys('/')
-		if keys[0]:
-			self.delete_keys(keys[1])
+		self.loop_delete('/')
 		for pref in range(97, 123):
-			keys = self.client.list_keys(chr(pref))
+			self.loop_delete(chr(pref))
+		for number in range(1, 10):
+			#keys = self.client.list_keys(str(number))
+			#if keys[0]:
+			#	self.delete_keys(keys[1])
+			self.loop_delete(str(number))
+	
+	def loop_delete(self, key):
+		after = None
+		cont = True
+		while cont:
+			keys = self.client.list_keys(prefix=key, after=after)
 			if keys[0]:
 				self.delete_keys(keys[1])
+				after = keys[0]
+			else:
+				cont = False
 
 	def download_file(self, key, name=None):
 		fname = name if name is not None else os.path.basename(key)
@@ -51,3 +63,8 @@ class MogTransport:
 		res = self.client.get_file_data(key, fp=fd)
 		fd.close()
 		return res
+
+	def list_keys(self, key):
+		#list_keys(self, prefix, after=None, limit=None):
+		keys = self.client.list_keys(prefix=key)
+		return keys
