@@ -51,13 +51,12 @@ def callback(ch, method, properties, body):
 	info = FileInfo(meta["base"], key)
 	fullpath = info.get_absolute_path()
 	if trans.key_exist(key=key):
-		logger.info(procid + " Key exist: " + key)
+		file_logger.warning(procid + " Key exist: " + key)
 	else:
 		file_logger.info("Scanning file: " + fullpath)
 		scan_result = scanner.scan_file(fullpath)
 		file_logger.info(procid + " Scanned file {0}: {1}".format(fullpath,scan_result))
 		if scan_result:
-			file_logger.warning()
 			trans_result = trans.send_file(source=fullpath, key=key, clas=migconfig.clas)
 			message = procid + " MogileFS key {0}: {1}".format(key, trans_result)
 			file_logger.info(message)
