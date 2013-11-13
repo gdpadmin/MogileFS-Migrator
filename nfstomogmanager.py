@@ -30,7 +30,7 @@ import shlex
 import re
 import misc
 import thread
-
+import migconfig
 
 # Global Variables
 migrator = []
@@ -119,14 +119,14 @@ def kill_all():
 	kill_validator()
 
 def count_validation_job():
-	validationmq = RMQClient(queue=misc.validation_queue)
+	validationmq = RMQClient(queue=migconfig.validation_queue)
 	msg_count = validationmq.get_message_count()
 	validationmq.close()
 
 	return "Validation job: " + str(msg_count)
 
 def count_migration_job():
-	migrationmq = RMQClient(queue=misc.migration_queue)
+	migrationmq = RMQClient(queue=migconfig.migration_queue)
         msg_count = migrationmq.get_message_count()
         migrationmq.close()
 
@@ -231,12 +231,12 @@ def remote_handler(sock, addr):
 if __name__ == "__main__":
 	setup()
 
-	ADDR = ("0.0.0.0", 12012)
+	ADDR = ("127.0.0.1", 12012)
 	serversock = socket(AF_INET, SOCK_STREAM)
 	serversock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 	serversock.bind(ADDR)
 	serversock.listen(5)
-	print "Listen on 0.0.0. port 12012"
+	print "Listen on 127.0.0.1 port 12012"
 	while 1:
 		clientsock, addr = serversock.accept()
 		thread.start_new_thread(remote_handler, (clientsock, addr))

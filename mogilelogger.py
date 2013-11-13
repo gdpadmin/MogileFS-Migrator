@@ -64,9 +64,9 @@ class MogileLogger:
 class FileLogger:
 
 	class __impl:
-		def __init__(self):
+		def __init__(self, log_file='/tmp/nfstomogile.log'):
 			self.logger = logging.getLogger('NFSToMogile')
-			fileHandler = logging.FileHandler('/tmp/nfstomogile.log')
+			fileHandler = logging.FileHandler(log_file)
 			formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 			fileHandler.setFormatter(formatter)
 			self.logger.addHandler(fileHandler)
@@ -83,9 +83,9 @@ class FileLogger:
 	
 	__instance = None
 	
-	def __init__(self):
+	def __init__(self, log_file='/tmp/nfstomogile.log'):
 		if FileLogger.__instance is None:
-			FileLogger.__instance = FileLogger.__impl()
+			FileLogger.__instance = FileLogger.__impl(log_file)
 		self.__dict__['_FileLogger_instance'] = FileLogger.__instance
 
 	def __getattr__(self, attr):

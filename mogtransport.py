@@ -1,4 +1,5 @@
 from mogilefs import Client
+from mogilefs import MogileFSError
 from mogilelogger import FileLogger
 import os
 
@@ -25,7 +26,12 @@ class MogTransport:
 		return res
 
 	def key_exist(self, key):
-		keys = self.client.list_keys(key)
+		error = False
+		try:
+			keys = self.client.list_keys(key)
+		except MogileFSError, e:
+			keys = [False,]
+		
 		return False if not keys[0] else True
 
 	def delete(self, key):

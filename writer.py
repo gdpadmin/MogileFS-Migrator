@@ -33,17 +33,16 @@ class RMQClient:
 			))
 
 	def receive(self, callback):
-		while True:
-			try:
-				self.callback = callback
-				self.default_timeout_callback()
-				self.channel.basic_qos(prefetch_count=1)
-				self.channel.basic_consume(callback,
-				queue=self.queue)
-				self.channel.start_consuming()
-			except NameError:
-				tb = traceback.format_exc()
-				self.logger.error(tb)
+		try:
+			self.callback = callback
+			self.default_timeout_callback()
+			self.channel.basic_qos(prefetch_count=1)
+			self.channel.basic_consume(callback,
+			queue=self.queue)
+			self.channel.start_consuming()
+		except NameError:
+			tb = traceback.format_exc()
+			self.logger.error(tb)
 
 	def get(self):
 		try:

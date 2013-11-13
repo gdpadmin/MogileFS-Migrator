@@ -20,6 +20,15 @@ def main():
 				print "Trackers available"
 			except mogilefs.MogileFSError:
 				raise
+		elif cmd == "exist":
+			try:
+				key = sys.argv[2]
+				exist = trans.key_exist(key)
+				print "Exist: " + repr(exist)
+			except IndexError:
+				raise
+			except mogilefs.MogileFSError:
+				raise
 	except IndexError:
 		usage()
 	except mogilefs.MogileFSError:
