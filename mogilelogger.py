@@ -65,14 +65,12 @@ class FileLogger:
 
 	class __impl:
 		def __init__(self):
-			#logging.basicConfig(FORMAT='%(asctime)s %(levelname)s %(message)s')
 			self.logger = logging.getLogger('NFSToMogile')
 			fileHandler = logging.FileHandler('/tmp/nfstomogile.log')
 			formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 			fileHandler.setFormatter(formatter)
 			self.logger.addHandler(fileHandler)
 			self.logger.setLevel(logging.INFO)
-			#logging.basicConfig(filename='/tmp/nfstomogile.log', level=logging.INFO)
 
 		def info(self, message):
 			self.logger.info(message)

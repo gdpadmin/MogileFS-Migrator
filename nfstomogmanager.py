@@ -119,18 +119,20 @@ def kill_all():
 	kill_validator()
 
 def count_validation_job():
-	return "Validation job: " + str(validationmq.get_message_count())
+	validationmq = RMQClient(queue=misc.validation_queue)
+	msg_count = validationmq.get_message_count()
+	validationmq.close()
+
+	return "Validation job: " + str(msg_count)
 
 def count_migration_job():
-	return "Migration job: " + str(migrationmq.get_message_count())
+	migrationmq = RMQClient(queue=misc.migration_queue)
+        msg_count = migrationmq.get_message_count()
+        migrationmq.close()
 
-def count_feeder_job():
-	return "Feeder job: " + str(feedermq.get_message_count())
+	return "Migration job: " + str(msg_count)
 
 def do_command(usercmd):
-	global cont_flag
-	global validationmq
-	global migrationmq
 	message = 'ok\n'
 
 	if usercmd == "!count_migration_job":
@@ -183,8 +185,6 @@ def start():
 	spawn_validator()
 
 def stats():
-	global feedermq
-
 	message = ''
 	message += list_migrator()
 	message += '\n' + count_migration_job()
@@ -213,13 +213,6 @@ def help():
 
 def remote_handler(sock, addr):
 	try:
-		global migrationmq
-		global validationmq
-		global feedermq
-		
-		migrationmq = RMQClient(queue="migration_job_queue")
-		validationmq = RMQClient(queue="validation_job_queue")
-		feedermq = RMQClient(queue="directory_job_queue")
 		while 1:
 			data = sock.recv(1024)
 			if not data: break
@@ -231,7 +224,6 @@ def remote_handler(sock, addr):
 				sock.send(result)
 	except AMQPConnectionError:
 		report_error('rabbitmq')
-		sock.close()
 	finally:
 		sock.close()
 		print addr, "- closed connection"

@@ -1,9 +1,13 @@
 import os
 import pika
+import traceback
+
+from mogilelogger import FileLogger
 
 class RMQClient:
 
 	def __init__(self, host='127.0.0.1', queue=''):
+		self.logger = FileLogger()
 		self.parameters = pika.ConnectionParameters(host)
 		self.connection = pika.BlockingConnection(self.parameters)
 		self.channel = self.connection.channel()
@@ -11,7 +15,7 @@ class RMQClient:
 		self.channel.queue_declare(queue=self.queue, durable=True, auto_delete=False)
 
 	def add_timeout(self, callback, timeout=60):
-		self.connection.add_timeout(timeout, callback)
+		self.timeout_id = self.connection.add_timeout(timeout, callback)
 	
 	def reconnect(self):
 		self.channel.basic_consume(self.callback, queue=self.queue)
@@ -29,12 +33,17 @@ class RMQClient:
 			))
 
 	def receive(self, callback):
-		self.callback = callback
-		self.default_timeout_callback()
-		self.channel.basic_qos(prefetch_count=1)
-		self.channel.basic_consume(callback,
-			queue=self.queue)
-		self.channel.start_consuming()
+		while True:
+			try:
+				self.callback = callback
+				self.default_timeout_callback()
+				self.channel.basic_qos(prefetch_count=1)
+				self.channel.basic_consume(callback,
+				queue=self.queue)
+				self.channel.start_consuming()
+			except NameError:
+				tb = traceback.format_exc()
+				self.logger.error(tb)
 
 	def get(self):
 		try:
@@ -45,7 +54,12 @@ class RMQClient:
 				self.channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 				return body
 		except AttributeError:
-			pass
+			tb = traceback.format_exc()
+			self.logger.error(tb)
+		except NameError:
+			tb = traceback.format_exc()
+			self.logger.error(tb)
+		
 		return False
 
 	def get_message_count(self):
@@ -53,5 +67,4 @@ class RMQClient:
 		return status.method.message_count
 
 	def close(self):
-		#self.connection.close()
-		pass
+		self.connection.close()

@@ -42,8 +42,11 @@ def callback(ch, method, properties, body):
 	global trans
 	global vclient
 	global mqclient
-	global procid
+	global id
 	stats = "NOT OK"
+	
+	trx_id = misc.generate_id(size=15)
+	procid = id + " " + trx_id
 
 	file_logger.info(procid + " Start Migration: " + repr(body))
 	meta = json.loads(body)
@@ -84,7 +87,7 @@ def callback(ch, method, properties, body):
 	file_logger.info(procid + " End migration %s: %s " %(repr(body),  stats))
 
 if __name__ == "__main__":
-	procid = misc.generate_id()
+	id = misc.generate_id()
 	domain = migconfig.domain
 	trackers = migconfig.trackers
 	file_logger = FileLogger()
