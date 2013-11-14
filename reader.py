@@ -18,6 +18,7 @@ def readAllDir(path):
 def readAllLevelSuffix(base, suffix):
 	result = []
         start = base
+	start_with_slash = start + '' if start[-1] == '/' else '/'
 	base_with_suffix = os.path.join(base, suffix)
         if os.path.isdir(base_with_suffix):
                 for path, dirs, files in os.walk(base_with_suffix):

@@ -52,6 +52,7 @@ def callback(ch, method, properties, body):
 	meta = json.loads(body)
 	key = meta["path"]
 	info = FileInfo(meta["base"], key)
+	file_logger.info("FileInfo " + repr(info))
 	fullpath = info.get_absolute_path()
 	if trans.key_exist(key=key):
 		file_logger.warning(procid + " Key exist: " + key)
