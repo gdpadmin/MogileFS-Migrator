@@ -10,7 +10,7 @@ from writer import RMQClient
 from pika.exceptions import AMQPConnectionError
 
 if __name__ == "__main__":
-	logger = FileLogger()
+	logger = FileLogger('/tmp/feeder.log')
 	path = sys.argv[1]
 	logger.info("Start reading file")
 	suffix = sys.argv[2]

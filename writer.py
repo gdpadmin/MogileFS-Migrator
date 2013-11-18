@@ -13,13 +13,18 @@ class RMQClient:
 		self.channel = self.connection.channel()
 		self.queue = queue
 		self.channel.queue_declare(queue=self.queue, durable=True, auto_delete=False)
+		self.callback = None
 
 	def add_timeout(self, callback, timeout=60):
 		self.timeout_id = self.connection.add_timeout(timeout, callback)
 	
 	def reconnect(self):
-		self.channel.basic_consume(self.callback, queue=self.queue)
-		self.channel.start_consuming()
+		try:
+			self.channel.basic_qos(prefetch_count=1)
+			self.channel.basic_consume(self.callback, queue=self.queue)
+			self.channel.start_consuming()
+		except NameError, e:
+			self.logger.error(e)
 
 	def default_timeout_callback(self):
 		self.add_timeout(self.reconnect)
@@ -34,7 +39,9 @@ class RMQClient:
 
 	def receive(self, callback):
 		try:
-			self.callback = callback
+			if self.callback is None:
+				self.callback = callback
+			
 			self.default_timeout_callback()
 			self.channel.basic_qos(prefetch_count=1)
 			self.channel.basic_consume(callback,

@@ -16,6 +16,7 @@ from mogtransport import MogTransport
 from fileinfo import FileInfo
 from pymongo import errors
 from pika.exceptions import AMQPConnectionError
+import mogilefs
 
 import sys
 import json
@@ -54,7 +55,13 @@ def callback(ch, method, properties, body):
 	info = FileInfo(meta["base"], key)
 	file_logger.info("FileInfo " + repr(info))
 	fullpath = info.get_absolute_path()
-	if trans.key_exist(key=key):
+	key_exist = False
+	try:
+		key_exist = trans.key_exist(key=key)
+	except mogilefs.MogileFSError:
+		pass
+
+	if key_exist:
 		file_logger.warning(procid + " Key exist: " + key)
 	elif not os.path.isfile(fullpath):
 		file_logger.warning(procid + " File does not exist: " + fullpath)

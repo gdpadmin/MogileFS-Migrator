@@ -29,7 +29,7 @@ class MogTransport:
 		error = False
 		try:
 			keys = self.client.list_keys(key)
-		except MogileFSError, e:
+		except MogileFSError:
 			keys = [False,]
 		
 		return False if not keys[0] else True

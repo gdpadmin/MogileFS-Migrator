@@ -11,8 +11,13 @@ usage(){
 	echo "kill - Kill migrator process"
 }
 killpython(){
-	echo "Killing all python process"
-	sudo pkill -9 python
+	echo "Killing nfstomogile.py process"
+	#sudo pkill -9 python
+	if [ -f nfstomogile.pid ]; then
+		kill -9 `cat nfstomogile.pid`
+	else
+		echo "Could not find file nfstomogile.pid"
+	fi
 }
 parsebase(){
 	TEMPIFS=$IFS
@@ -43,7 +48,8 @@ elif [ "$ACTION" == "start" ]; then
 		rm -f $NOHUP
 		# Start migrator
 		nohup python $FILE &
-		# display nohup outpu
+		# display nohup output
+		echo $! > nfstomogile.pid
 		sleep 2
 		cat $NOHUP
 	else

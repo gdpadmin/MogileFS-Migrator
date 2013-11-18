@@ -64,26 +64,32 @@ class MogileLogger:
 class FileLogger:
 
 	class __impl:
-		def __init__(self, log_file='/tmp/nfstomogile.log'):
+		def __init__(self, log_file):
 			self.logger = logging.getLogger('NFSToMogile')
 			fileHandler = logging.FileHandler(log_file)
 			formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 			fileHandler.setFormatter(formatter)
 			self.logger.addHandler(fileHandler)
-			self.logger.setLevel(logging.INFO)
+			self.logger.setLevel(logging.INFO);
+			
+			self.loggerError = logging.getLogger('NFSToMogileError')
+			errorFileHandler = logging.FileHandler(log_file + '.error')
+			errorFileHandler.setFormatter(formatter)
+			self.loggerError.addHandler(errorFileHandler)
+			self.loggerError.setLevel(logging.WARNING)
 
 		def info(self, message):
 			self.logger.info(message)
 
 		def error(self, message):
-			self.logger.error(message)
+			self.loggerError.error(message)
 
 		def warning(self, message):
-			self.logger.warning(message)
+			self.loggerError.warning(message)
 	
 	__instance = None
 	
-	def __init__(self, log_file='/tmp/nfstomogile.log'):
+	def __init__(self, log_file='/tmp/kaskusmigration.log'):
 		if FileLogger.__instance is None:
 			FileLogger.__instance = FileLogger.__impl(log_file)
 		self.__dict__['_FileLogger_instance'] = FileLogger.__instance
