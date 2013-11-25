@@ -12,10 +12,13 @@ def write_to_file(data, name):
 
 if __name__ == "__main__":
         logger = FileLogger('/tmp/feeder.log')
-        path = sys.argv[1]
-        logger.info("Start reading file")
-        suffix = sys.argv[2]
-        result = reader.readLevel(path, suffix)
-	write_to_file(result['files'], 'files.json')
-	write_to_file(result['directories'], 'directory.json')
+	try:
+        	path = sys.argv[1]
+        	logger.info("Start reading file")
+        	suffix = sys.argv[2]
+        	result = reader.readLevel(path, suffix)
+		write_to_file(result['files'], 'files.json')
+		write_to_file(result['directories'], 'directory.json')
+	except IndexError:
+		print "Usage: feedToFile.py [path] [suffix]"
 
