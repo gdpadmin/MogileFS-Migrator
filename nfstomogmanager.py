@@ -56,7 +56,7 @@ def list_migrator():
 	migarr = []
 	for proc in migrator:
 		migarr.append(proc.pid)
-	return "Migrator: " + repr(migarr)
+	return "Migrator: %s, %s" %(len(migarr), repr(migarr))
 
 def spawn_validator(number=2):
 	global validator
@@ -83,7 +83,7 @@ def list_validator():
 	valarr = []
 	for proc in validator:
 		valarr.append(proc.pid)
-	return "Validator: " + repr(valarr)
+	return "Validator: %s, %s" % (len(valarr), repr(valarr))
 
 def reset_migrator():
 	length = len(migrator)

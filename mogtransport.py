@@ -15,14 +15,18 @@ class MogTransport:
 
 	def send_file(self, key, source, clas=None, force=False):
 		res = True
-		if self.key_exist(key):
-			if force:
-				self.delete(key)
-				res = self.client.send_file(key=key, source=source, clas=clas)
+		try:
+			if self.key_exist(key):
+				if force:
+					self.delete(key)
+					res = self.client.send_file(key=key, source=source, clas=clas)
+				else:
+					res = None
 			else:
-				res = None
-		else:
-			res = self.client.send_file(key=key, source=source, clas=clas)
+				res = self.client.send_file(key=key, source=source, clas=clas)
+		except MogileFSError:
+			res = False
+			self.delete(key)
 		return res
 
 	def key_exist(self, key):
